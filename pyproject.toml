@@ -10,7 +10,7 @@ authors = [
     {name = "Greg Stitt"},
 ]
 description = "A python CLI tool for RTL Exploration and eXecution."
-readme = "README.rst"
+readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["rtl", "hdl", "fpga"]
 dependencies = []
