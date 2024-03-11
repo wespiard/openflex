@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "py-rex"
+version = "0.1.0"
+authors = [
+    {name = "Wesley Piard"},
+    {name = "Greg Stitt"},
+]
+description = "A python CLI tool for RTL Exploration and eXecution."
+readme = "README.rst"
+license = {file = "LICENSE"}
+keywords = ["rtl", "hdl", "fpga"]
+dependencies = []
+
+[tool.setuptools]
+packages = ["rex"]
+
+[project.scripts]
+rex = "rex.__main__:main"
