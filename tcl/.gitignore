@@ -1,0 +1,44 @@
+# Whitelist (to keep Tcl files, etc.)
+# The goal of this file is to ignore Vivado temp files, logs, etc.
+*
+# !*/
+!.gitignore
+
+# Ignore .Xil/ directory
+.Xil/
+
+# Keep shell scripts
+!*.sh
+
+#-------------------------------------
+# Vivado (files to KEEP)
+#-------------------------------------
+#------------------
+# Source files
+#------------------
+!*.vhd
+!*.v
+!*.sv*
+!*.bd
+!*.edif
+
+#------------------
+# Project files
+#------------------
+!*.xpr
+
+#------------------
+# Constraint files
+#------------------
+# !*.xdc
+
+#------------------
+# Tcl files
+#------------------
+!*.tcl
+
+#------------------
+# Reports
+#------------------
+# !*.rpt
+!*.vdi

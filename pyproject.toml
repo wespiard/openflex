@@ -3,20 +3,23 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "py-rex"
+name = "openflex"
 version = "0.1.0"
 authors = [
-    {name = "Wesley Piard"},
     {name = "Greg Stitt"},
+    {name = "Wesley Piard"},
 ]
-description = "A python CLI tool for RTL Exploration and eXecution."
+description = "**F**ramework for **L**ogic Synthesis and **EX**ploration"
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["rtl", "hdl", "fpga"]
-dependencies = []
+dependencies = [
+    "pyyaml>=6",
+    "click>=8"
+]
 
 [tool.setuptools]
-packages = ["rex"]
+packages = ["openflex"]
 
 [project.scripts]
-rex = "rex.__main__:main"
+openflex = "openflex.__main__:run"

@@ -1,0 +1,23 @@
+mode: synth
+tool: quartus
+# tool: vivado
+top: shift_pipe
+clock: clk
+reset: rst
+device: AGIC040R39A2I3V #Agilex 7 (I-Tile)
+# device: xcvu9p-flga2104-2L-e #Virtex Ultrascale+
+
+files:
+  - ../../vlp-fpga-2023/src/shift_pipe.sv
+
+parameters:
+  MAX_SHIFT: [4]
+  WORD_WIDTH: [8]
+  DIRECTION: [0]
+  NUM_WORDS: [4]
+
+# parameters:
+#   MAX_SHIFT: [1,4,16,64]
+#   WORD_WIDTH: [8, 16]
+#   DIRECTION: [0,1]
+#   NUM_WORDS: [4,16,64,256]
