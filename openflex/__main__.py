@@ -79,13 +79,13 @@ class OpenFLEX:
 
             for g in group_params:
                 param_combinations.extend(g)
-        
+
         self.combinations = param_combinations
-        
+
         # if not "clock" in self.config:
         #    self.config["clock"] = "clk"
 
-        #if not "reset" in self.config:
+        # if not "reset" in self.config:
         #    self.config["clock"] = "rst"
 
     def filter(self, f):
@@ -199,21 +199,21 @@ class OpenFLEX:
 
     def process_quartus_results(self, parameters, output, csv_filename):
 
-        lines = output.split('\n')
-        
+        lines = output.split("\n")
+
         for line in lines:
             if line.startswith("HEADERS: "):
                 # Strip off the "HEADERS: " prefix
-                result_headers = line[len("HEADERS: "):].split(',')
+                result_headers = line[len("HEADERS: ") :].split(",")
             elif line.startswith("VALUES: "):
                 # Strip off the "VALUES: " prefix
-                result_values = line[len("VALUES: "):].split(',')                    
-    
-        if not os.path.exists(csv_filename):            
+                result_values = line[len("VALUES: ") :].split(",")
+
+        if not os.path.exists(csv_filename):
             # Create the CSV column headers
             headers = [x for x in parameters.keys()]
             headers.extend(result_headers)
-            
+
             # A little lazy here to close the file and then re-open it again.
             with open(csv_filename, "w", newline="") as csv_file:
                 csv_writer = csv.writer(csv_file)
@@ -223,29 +223,38 @@ class OpenFLEX:
             csv_writer = csv.writer(csv_file)
 
             row = [x for x in parameters.values()]
-            row.extend(result_values)        
+            row.extend(result_values)
 
             csv_writer.writerow(row)
-
 
     def quartus_synth(self, csv_filename="", clk_period=1.0):
 
         clk_period = float(clk_period)
         quartus_dir = "tcl"
-        
+
         for p in self.combinations:
 
             # Create the SDC file.
             with open(f"{quartus_dir}/{self.config['top']}.sdc", "w") as sdc:
                 sdc.write("set_time_format -unit ns -decimal_places 3\n")
-                sdc.write(f"create_clock -name {{clk}} -period {clk_period} -waveform {{ 0.000 {clk_period/2.0} }} [get_ports {{{self.config['clock']}}}]\n")
-                sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n")
-                sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n")
-                sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n")
-                sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n")
-            
+                sdc.write(
+                    f"create_clock -name {{clk}} -period {clk_period} -waveform {{ 0.000 {clk_period/2.0} }} [get_ports {{{self.config['clock']}}}]\n"
+                )
+                sdc.write(
+                    "set_clock_uncertainty -rise_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n"
+                )
+                sdc.write(
+                    "set_clock_uncertainty -rise_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n"
+                )
+                sdc.write(
+                    "set_clock_uncertainty -fall_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n"
+                )
+                sdc.write(
+                    "set_clock_uncertainty -fall_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n"
+                )
+
             # Create the project.
-            create_project_cmd =  f"quartus_sh --tcl_eval project_new -overwrite {self.config['top']} -part {self.config['device']}"
+            create_project_cmd = f"quartus_sh --tcl_eval project_new -overwrite {self.config['top']} -part {self.config['device']}"
             create_project_cmd_list = create_project_cmd.split()
             subprocess.run(create_project_cmd_list, cwd=quartus_dir)
 
@@ -268,12 +277,13 @@ class OpenFLEX:
                             f"set_global_assignment -name {assignment_names[ext]} {f}\n"
                         )
                     except KeyError as k:
-                        print(f"Extension {k} from file in filelist is not supported: {f}.")
+                        print(
+                            f"Extension {k} from file in filelist is not supported: {f}."
+                        )
 
                 # Define the parameters
                 for k, v in p.items():
                     qsf.write(f"set_parameter -name {k} {v}\n")
-
 
             # Open the project, set virtual pins, and compile.
             tcl_cmd = (
@@ -281,25 +291,23 @@ class OpenFLEX:
                 + 'set_instance_assignment -to "*" -name VIRTUAL_PIN ON;'
                 + f'set_instance_assignment -to {self.config["clock"]} -name VIRTUAL_PIN OFF;'
                 + f'set_instance_assignment -to {self.config["reset"]} -name VIRTUAL_PIN OFF;'
-                #+ f'remove_all_instance_assignments -name VIRTUAL_PIN -to clk;'
-                #+ f'remove_all_instance_assignments -name VIRTUAL_PIN -to rst;'
+                # + f'remove_all_instance_assignments -name VIRTUAL_PIN -to clk;'
+                # + f'remove_all_instance_assignments -name VIRTUAL_PIN -to rst;'
                 + "load_package flow;"
                 + "execute_module -tool map;"
                 + "execute_module -tool fit;"
                 + "execute_module -tool sta"
-                #+ "execute_flow -compile"
-                
+                # + "execute_flow -compile"
             )
             tcl_cmd_list = tcl_cmd.split()
-            subprocess.run(tcl_cmd_list, cwd=quartus_dir)       
-            
-            
+            subprocess.run(tcl_cmd_list, cwd=quartus_dir)
+
             result_cmd = f"quartus_sh -t quartus_results.tcl -q {self.config['top']} -f {os.path.abspath(csv_filename)}"
             result_cmd_list = result_cmd.split()
-            output = subprocess.check_output(result_cmd_list, universal_newlines=True, cwd=quartus_dir)        
-            self.process_quartus_results(p, output, csv_filename)            
-        
-
+            output = subprocess.check_output(
+                result_cmd_list, universal_newlines=True, cwd=quartus_dir
+            )
+            self.process_quartus_results(p, output, csv_filename)
 
     def questa_sim(self):
         contains_sv = False
@@ -322,13 +330,13 @@ class OpenFLEX:
             for param, value in test_case.items():
                 test_name += f"_{param}_{value}"
 
-            print(f"\n")
+            print("\n")
             print(
-                f"----------------------------------------------------------------------"
+                "----------------------------------------------------------------------"
             )
             print(f"    RUNNING TEST: {test_name}")
             print(
-                f"----------------------------------------------------------------------"
+                "----------------------------------------------------------------------"
             )
 
             build_cmd = []
@@ -354,14 +362,14 @@ class OpenFLEX:
         # NOTE: This doesn't work in modelsim because the returncode doesn't capture
         # assertion failures.
         if tests_failed > 0:
-            print(f"\n")
+            print("\n")
             print(
-                f"----------------------------------------------------------------------"
+                "----------------------------------------------------------------------"
             )
             print(f"Tests failed: {tests_failed}")
             [print(t) for t in failed_tests]
             print(
-                f"----------------------------------------------------------------------"
+                "----------------------------------------------------------------------"
             )
         # else:
         #    print(f"\nSUCCESS: All tests passed.")
@@ -379,7 +387,7 @@ def run(config_file, mode, tool, synth_csv, clk_period, sample):
 
     # The command line can override the mode and tool of the YAML
     mode = mode if mode else dut.config["mode"]
-    tool = tool if tool else dut.config["tool"] 
+    tool = tool if tool else dut.config["tool"]
 
     if sample:
         dut.sample(sample)
@@ -394,7 +402,7 @@ def run(config_file, mode, tool, synth_csv, clk_period, sample):
         if not synth_csv:
             sys.exit("ERROR: Missing CSV filename")
 
-        if tool == "vivado":           
+        if tool == "vivado":
             dut.vivado_synth(synth_csv, clk_period)
         elif tool == "quartus":
             dut.quartus_synth(synth_csv, clk_period)
