@@ -18,18 +18,18 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
-import itertools
-import copy
 import sys
-import yaml
-import subprocess
-import csv
+import copy
 import random
 import pathlib
+import itertools
+import subprocess
+import csv
+import yaml
 import click
 
 
-class OpenFLEX:
+class FlexConfig:
     def __init__(self, config_file) -> None:
         try:
             with open(config_file, "r") as y:
@@ -73,9 +73,9 @@ class OpenFLEX:
 
                     group_params.append(param_combinations2)
                 else:
-                    sys.exit(
-                        "ERROR: Parameter group must either be a subset of the existing parameters, or mutually exclusive."
-                    )
+                    # fmt: off
+                    sys.exit("ERROR: Parameter group must either be a subset of the existing parameters, or mutually exclusive." )
+                    # fmt: on
 
             for g in group_params:
                 param_combinations.extend(g)
@@ -236,22 +236,14 @@ class OpenFLEX:
 
             # Create the SDC file.
             with open(f"{quartus_dir}/{self.config['top']}.sdc", "w") as sdc:
+                # fmt: off
                 sdc.write("set_time_format -unit ns -decimal_places 3\n")
-                sdc.write(
-                    f"create_clock -name {{clk}} -period {clk_period} -waveform {{ 0.000 {clk_period/2.0} }} [get_ports {{{self.config['clock']}}}]\n"
-                )
-                sdc.write(
-                    "set_clock_uncertainty -rise_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n"
-                )
-                sdc.write(
-                    "set_clock_uncertainty -rise_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n"
-                )
-                sdc.write(
-                    "set_clock_uncertainty -fall_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n"
-                )
-                sdc.write(
-                    "set_clock_uncertainty -fall_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n"
-                )
+                sdc.write(f"create_clock -name {{clk}} -period {clk_period} -waveform {{ 0.000 {clk_period/2.0} }} [get_ports {{{self.config['clock']}}}]\n" )
+                sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n" )
+                sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n" )
+                sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n" )
+                sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n" )
+                # fmt: on
 
             # Create the project.
             create_project_cmd = f"quartus_sh --tcl_eval project_new -overwrite {self.config['top']} -part {self.config['device']}"
@@ -273,13 +265,9 @@ class OpenFLEX:
                 for f in self.files:
                     ext = pathlib.Path(f).suffix
                     try:
-                        qsf.write(
-                            f"set_global_assignment -name {assignment_names[ext]} {f}\n"
-                        )
+                        qsf.write(f"set_global_assignment -name {assignment_names[ext]} {f}\n")
                     except KeyError as k:
-                        print(
-                            f"Extension {k} from file in filelist is not supported: {f}."
-                        )
+                        print(f"Extension {k} from file in filelist is not supported: {f}.")
 
                 # Define the parameters
                 for k, v in p.items():
@@ -327,17 +315,16 @@ class OpenFLEX:
         for test_case in self.combinations:
             test_name = "build_" + self.config["top"]
             # print(f"test_case {test_case}")
-            for param, value in test_case.items():
+            for (
+                param,
+                value,
+            ) in test_case.items():
                 test_name += f"_{param}_{value}"
 
             print("\n")
-            print(
-                "----------------------------------------------------------------------"
-            )
+            print("----------------------------------------------------------------------")
             print(f"    RUNNING TEST: {test_name}")
-            print(
-                "----------------------------------------------------------------------"
-            )
+            print("----------------------------------------------------------------------")
 
             build_cmd = []
             build_cmd.append("qrun")
@@ -345,7 +332,10 @@ class OpenFLEX:
             if contains_sv:
                 build_cmd.append("-sv")
             build_cmd.append("-timescale=1ns/100ps")
-            for param, value in test_case.items():
+            for (
+                param,
+                value,
+            ) in test_case.items():
                 build_cmd.append("-g")
                 build_cmd.append(f"{param}={value}")
             for f in self.files:
@@ -363,14 +353,10 @@ class OpenFLEX:
         # assertion failures.
         if tests_failed > 0:
             print("\n")
-            print(
-                "----------------------------------------------------------------------"
-            )
+            print("----------------------------------------------------------------------")
             print(f"Tests failed: {tests_failed}")
             [print(t) for t in failed_tests]
-            print(
-                "----------------------------------------------------------------------"
-            )
+            print("----------------------------------------------------------------------")
         # else:
         #    print(f"\nSUCCESS: All tests passed.")
 
@@ -383,7 +369,7 @@ class OpenFLEX:
 @click.option("-p", "--clk_period", help="clock period", default="1.0")
 @click.option("-s", "--sample", help="randomly sample specified amount")
 def run(config_file, mode, tool, synth_csv, clk_period, sample):
-    dut = OpenFLEX(config_file)
+    dut = FlexConfig(config_file)
 
     # The command line can override the mode and tool of the YAML
     mode = mode if mode else dut.config["mode"]
@@ -410,7 +396,3 @@ def run(config_file, mode, tool, synth_csv, clk_period, sample):
             sys.exit("ERROR: Invalid synthesis tool.")
     else:
         sys.exit("ERROR: Invalid mode.")
-
-
-# if __name__ == "__main__":
-#     run()

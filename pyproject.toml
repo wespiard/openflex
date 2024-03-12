@@ -18,8 +18,12 @@ dependencies = [
     "click>=8"
 ]
 
+[project.scripts]
+openflex = "openflex.__main__:run"
+
 [tool.setuptools]
 packages = ["openflex"]
 
-[project.scripts]
-openflex = "openflex.__main__:run"
+[tool.black]
+line-length = 100
+
