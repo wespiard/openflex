@@ -23,7 +23,3 @@ openflex = "openflex.__main__:run"
 
 [tool.setuptools]
 packages = ["openflex"]
-
-[tool.black]
-line-length = 100
-
