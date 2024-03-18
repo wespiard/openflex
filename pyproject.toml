@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openflex"
-version = "0.1.2"
+version = "0.1.1"
 authors = [
     {name = "Greg Stitt"},
     {name = "Wesley Piard"},
