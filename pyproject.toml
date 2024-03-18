@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openflex"
-version = "0.1.0"
+version = "0.1.2"
 authors = [
     {name = "Greg Stitt"},
     {name = "Wesley Piard"},
 ]
-description = "**F**ramework for **L**ogic Synthesis and **EX**ploration"
+description = "Framework for Logic Synthesis and EXploration"
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["rtl", "hdl", "fpga"]
