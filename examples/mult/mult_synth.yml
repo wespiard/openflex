@@ -5,12 +5,13 @@ top: mult
 # clock: clk
 # reset: rst
 
-device: 10CX220YF672E5G # Cyclone 10 GX
+device: 10CX220YF672E5G #Cyclone 10 GX
 # device: AGIC040R39A2I3V #Agilex 7 (I-Tile)
+# device: xc7a12tcsg325-2 #Artix 7
 # device: xcvu9p-flga2104-2L-e #Virtex Ultrascale+
 
 files:
-  - ../rtl/mult.sv
+  - ./mult.sv
 
 parameters:
   IS_SIGNED: [0]

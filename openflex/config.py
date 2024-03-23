@@ -105,7 +105,10 @@ class FlexConfig:
         self.combinations = random.sample(self.combinations, int(n))
 
     def process_vivado_results(self, parameters, csv_filename):
-        vivado_file = "tcl/vivado_report.txt"
+        # TODO: should we force user to delete build dir, or give option?
+        vivado_build_dir = pathlib.Path("build_vivado").mkdir(exist_ok=False)
+        vivado_file = os.path.join(vivado_build_dir, "vivado_report.txt")
+        # vivado_file = "tcl/vivado_report.txt"
 
         with open(vivado_file, "r") as file:
             # Read the first line as a float
@@ -156,10 +159,12 @@ class FlexConfig:
             csv_writer.writerow(row)
 
     def vivado_synth(self, csv_filename, clk_period=1.0):
-        vivado_dir = "tcl"
+        vivado_dir = "build_vivado"
         vivado_filelist = f"{vivado_dir}/filelist.txt"
         vivado_parameters = f"{vivado_dir}/parameters.txt"
         vivado_xdc = f"{vivado_dir}/vivado.xdc"
+
+        vivado_tcl_file = os.path.join(os.path.dirname(__file__), "tcl", "vivado_flow.tcl")
 
         # Generate the filelist
         with open(vivado_filelist, "w") as file:
@@ -186,7 +191,7 @@ class FlexConfig:
             build_cmd.append("-mode")
             build_cmd.append("batch")
             build_cmd.append("-source")
-            build_cmd.append("vivado_flow.tcl")
+            build_cmd.append(vivado_tcl_file)
             build_cmd.append("-tclargs")
             build_cmd.append(self.config["top"])
             build_cmd.append(self.config["device"])
@@ -230,25 +235,42 @@ class FlexConfig:
     def quartus_synth(self, csv_filename="", clk_period=1.0):
 
         clk_period = float(clk_period)
-        quartus_dir = "tcl"
+        quartus_dir = "build_quartus"
+        try:
+            os.mkdir(quartus_dir)
+        except FileExistsError:
+            print(f"Directory '{quartus_dir}' already exists.")
+            sys.exit(1)
+
+        using_clock = "clock" in self.config
+        using_reset = "reset" in self.config
+
+        quartus_results_tcl_file = os.path.join(
+            os.path.dirname(__file__), "tcl", "quartus_results.tcl"
+        )
 
         for p in self.combinations:
 
-            # Create the SDC file.
-            with open(f"{quartus_dir}/{self.config['top']}.sdc", "w") as sdc:
-                # fmt: off
-                sdc.write("set_time_format -unit ns -decimal_places 3\n")
-                sdc.write(f"create_clock -name {{clk}} -period {clk_period} -waveform {{ 0.000 {clk_period/2.0} }} [get_ports {{{self.config['clock']}}}]\n" )
-                sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n" )
-                sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n" )
-                sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n" )
-                sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n" )
-                # fmt: on
+            # Create the SDC file (only if clock provided in config)
+            if using_clock:
+                with open(f"{quartus_dir}/{self.config['top']}.sdc", "w") as sdc:
+                    # fmt: off
+                    sdc.write("set_time_format -unit ns -decimal_places 3\n")
+                    sdc.write(f"create_clock -name {{clk}} -period {clk_period} -waveform {{ 0.000 {clk_period/2.0} }} [get_ports {{{self.config['clock']}}}]\n" )
+                    sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n" )
+                    sdc.write("set_clock_uncertainty -rise_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n" )
+                    sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -rise_to [get_clocks {clk}]  0.020\n" )
+                    sdc.write("set_clock_uncertainty -fall_from [get_clocks {clk}] -fall_to [get_clocks {clk}]  0.020\n" )
+                    # fmt: on
 
             # Create the project.
             create_project_cmd = f"quartus_sh --tcl_eval project_new -overwrite {self.config['top']} -part {self.config['device']}"
             create_project_cmd_list = create_project_cmd.split()
-            subprocess.run(create_project_cmd_list, cwd=quartus_dir)
+
+            try:
+                subprocess.run(create_project_cmd_list, cwd=quartus_dir)
+            except FileNotFoundError:
+                print("Ensure Quartus' (quartus_sh) is installed or active in your environment.")
 
             # Create the QSF.
             with open(f"{quartus_dir}/{self.config['top']}.qsf", "a") as qsf:
@@ -273,24 +295,37 @@ class FlexConfig:
                 for k, v in p.items():
                     qsf.write(f"set_parameter -name {k} {v}\n")
 
-            # Open the project, set virtual pins, and compile.
+            # Open the project and set virtual pins
             tcl_cmd = (
                 f"quartus_sh --tcl_eval project_open {self.config['top']}.qpf;"
                 + 'set_instance_assignment -to "*" -name VIRTUAL_PIN ON;'
-                + f'set_instance_assignment -to {self.config["clock"]} -name VIRTUAL_PIN OFF;'
-                + f'set_instance_assignment -to {self.config["reset"]} -name VIRTUAL_PIN OFF;'
-                # + f'remove_all_instance_assignments -name VIRTUAL_PIN -to clk;'
-                # + f'remove_all_instance_assignments -name VIRTUAL_PIN -to rst;'
-                + "load_package flow;"
+            )
+
+            # Only disable clk/rst virtual pins if they are present.
+            if using_clock:
+                tcl_cmd += (
+                    f'set_instance_assignment -to {self.config["clock"]} -name VIRTUAL_PIN OFF;'
+                )
+            if using_reset:
+                tcl_cmd += (
+                    f'set_instance_assignment -to {self.config["reset"]} -name VIRTUAL_PIN OFF;'
+                )
+
+            # Compile
+            tcl_cmd += (
+                "load_package flow;"
                 + "execute_module -tool map;"
                 + "execute_module -tool fit;"
                 + "execute_module -tool sta"
                 # + "execute_flow -compile"
             )
+
+            print(tcl_cmd)
+
             tcl_cmd_list = tcl_cmd.split()
             subprocess.run(tcl_cmd_list, cwd=quartus_dir)
 
-            result_cmd = f"quartus_sh -t quartus_results.tcl -q {self.config['top']} -f {os.path.abspath(csv_filename)}"
+            result_cmd = f"quartus_sh -t {quartus_results_tcl_file} -q {self.config['top']} -f {os.path.abspath(csv_filename)}"
             result_cmd_list = result_cmd.split()
             output = subprocess.check_output(
                 result_cmd_list, universal_newlines=True, cwd=quartus_dir
@@ -303,10 +338,9 @@ class FlexConfig:
             contains_sv = ".sv" in f
             break
 
-        sim_dir = "questa_sim"
         # Create build directory for the current test case
-        if not os.path.exists(sim_dir):
-            os.mkdir(sim_dir)
+        sim_dir = pathlib.Path("build_questa")
+        sim_dir.mkdir(exist_ok=True)
 
         tests_failed = 0
         failed_tests = []
@@ -315,10 +349,7 @@ class FlexConfig:
         for test_case in self.combinations:
             test_name = "build_" + self.config["top"]
             # print(f"test_case {test_case}")
-            for (
-                param,
-                value,
-            ) in test_case.items():
+            for param, value in test_case.items():
                 test_name += f"_{param}_{value}"
 
             print("\n")
@@ -332,10 +363,7 @@ class FlexConfig:
             if contains_sv:
                 build_cmd.append("-sv")
             build_cmd.append("-timescale=1ns/100ps")
-            for (
-                param,
-                value,
-            ) in test_case.items():
+            for param, value in test_case.items():
                 build_cmd.append("-g")
                 build_cmd.append(f"{param}={value}")
             for f in self.files:

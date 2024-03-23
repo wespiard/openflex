@@ -21,8 +21,8 @@ dependencies = [
 [project.scripts]
 openflex = "openflex.__main__:run"
 
-[tool.setuptools]
-packages = ["openflex"]
+[tool.setuptools.packages.find]
+include = ["openflex"]
 
 [tool.black]
 line-length = 100

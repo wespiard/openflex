@@ -1,6 +1,13 @@
 # Node
 node_modules/
 
+#openflex
+build_*
+*.csv
+
+# Vivado
+*.jou
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

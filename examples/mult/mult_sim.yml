@@ -3,8 +3,8 @@ tool: questa
 top: mult_tb
 
 files:
-  - ../rtl/mult.sv
-  - ../rtl/mult_tb.sv
+  - ./mult.sv
+  - ./mult_tb.sv
 
 parameters:
   NUM_TESTS: [10]

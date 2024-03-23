@@ -1,0 +1,14 @@
+mode: synth
+tool: quartus
+top: blinky
+clock: clk
+reset: rst
+
+device: 10CX220YF672E5G #Cyclone 10 GX
+# device: xc7a12tcsg325-2 #Artix 7
+
+files:
+  - ./blinky.sv
+
+parameters:
+  COUNT: [100, 1000000]
