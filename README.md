@@ -26,13 +26,15 @@ deactivate
 
 ## Usage
 
-The following usage instructions will use files from the `examples/` directory of this repository. Currently, there are two examples: 
+The following usage instructions will use files from the `examples/` directory of this repository. Currently, there are two examples:
+
 1) `examples/mult/` : simple combinational logic multiplier with a testbench
 2) `examples/blinky/` : classic `blinky` counter/LED example without a testbench
 
 Each example directory contains two types of files: (1) RTL modules and (2) YAML configuration files. The YAML configuration files are used to contain the details/parameters required to simulate or synthesize the RTL modules, e.g., file list, EDA tool, top-level module/testbench parameters, etc.
 
 Examine the `mult_sim.yml` YAML configuration file contents:
+
 ```yaml
 mode: sim
 tool: questa
@@ -50,14 +52,14 @@ parameters:
 
 With this configuration, OpenFLEX will run the `mult_tb` testbench four times (Cartesian product of the `IS_SIGNED` and `INPUT_WIDTH` parameters).
 
-To run a simulation using the `mult` example, make sure any relevant virtual environment is loaded, and run the following commands: 
+To run a simulation using the `mult` example, make sure any relevant virtual environment is loaded, and run the following commands:
 
 ```bash
 cd examples/mult
 openflex mult_sim.yml
 ```
 
-This will create a `build_questa` directory that contains the build artifacts, logs, etc. 
+This will create a `build_questa` directory that contains the build artifacts, logs, etc.
 
 ## Contributing
 
