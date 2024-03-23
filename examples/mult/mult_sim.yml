@@ -1,0 +1,12 @@
+mode: sim
+tool: questa
+top: mult_tb
+
+files:
+  - ../rtl/mult.sv
+  - ../rtl/mult_tb.sv
+
+parameters:
+  NUM_TESTS: [10]
+  IS_SIGNED: [0, 1]
+  INPUT_WIDTH: [8, 16]
