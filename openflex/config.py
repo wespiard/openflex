@@ -109,7 +109,6 @@ class FlexConfig:
         # vivado_build_dir = pathlib.Path("build_vivado").mkdir(exist_ok=True)
         vivado_dir = "build_vivado"
         vivado_file = os.path.join(vivado_dir, "vivado_report.txt")
-        # vivado_file = "tcl/vivado_report.txt"
 
         with open(vivado_file, "r") as file:
             # Read the first line as a float
