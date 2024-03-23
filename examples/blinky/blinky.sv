@@ -7,22 +7,22 @@
 module blinky #(
     parameter int COUNT = 1000000
 ) (
-    input  logic clk_i,
-    input  logic rst_i,
-    output logic led_o
+    input  logic clk,
+    input  logic rst,
+    output logic led
 );
 
   logic [$clog2(COUNT)-1:0] counter_r;
 
-  always_ff @(posedge clk_i) begin
+  always_ff @(posedge clk) begin
 
     counter_r++;
 
-    if (rst_i) begin
+    if (rst) begin
       counter_r <= '0;
     end
   end
 
-  assign led_o = counter_r[$left(counter_r)];
+  assign led = counter_r[$left(counter_r)];
 
 endmodule

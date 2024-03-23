@@ -7,6 +7,6 @@ files:
   - ./mult_tb.sv
 
 parameters:
-  NUM_TESTS: [10]
+  NUM_TESTS: [1000]
   IS_SIGNED: [0, 1]
   INPUT_WIDTH: [8, 16]

@@ -14,5 +14,5 @@ files:
   - ./mult.sv
 
 parameters:
-  IS_SIGNED: [0]
-  INPUT_WIDTH: [8]
+  IS_SIGNED: [0, 1]
+  INPUT_WIDTH: [8, 16]

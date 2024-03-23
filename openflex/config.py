@@ -106,8 +106,9 @@ class FlexConfig:
 
     def process_vivado_results(self, parameters, csv_filename):
         # TODO: should we force user to delete build dir, or give option?
-        vivado_build_dir = pathlib.Path("build_vivado").mkdir(exist_ok=False)
-        vivado_file = os.path.join(vivado_build_dir, "vivado_report.txt")
+        # vivado_build_dir = pathlib.Path("build_vivado").mkdir(exist_ok=True)
+        vivado_dir = "build_vivado"
+        vivado_file = os.path.join(vivado_dir, "vivado_report.txt")
         # vivado_file = "tcl/vivado_report.txt"
 
         with open(vivado_file, "r") as file:
@@ -165,6 +166,7 @@ class FlexConfig:
         vivado_xdc = f"{vivado_dir}/vivado.xdc"
 
         vivado_tcl_file = os.path.join(os.path.dirname(__file__), "tcl", "vivado_flow.tcl")
+        pathlib.Path(vivado_dir).mkdir(exist_ok=True)
 
         # Generate the filelist
         with open(vivado_filelist, "w") as file:
