@@ -33,6 +33,8 @@ The following usage instructions will use files from the `examples/` directory o
 
 Each example directory contains two types of files: (1) RTL modules and (2) YAML configuration files. The YAML configuration files are used to contain the details/parameters required to simulate or synthesize the RTL modules, e.g., file list, EDA tool, top-level module/testbench parameters, etc.
 
+### Multiplier Simulation Example
+
 Examine the `mult_sim.yml` YAML configuration file contents:
 
 ```yaml
@@ -60,6 +62,45 @@ openflex mult_sim.yml
 ```
 
 This will create a `build_questa` directory that contains the build artifacts, logs, etc.
+
+### Blinky Synthesis Example
+
+To run synthesis/PnR/STA on the blinky module, similarly, you can run the following:
+
+```bash
+cd examples/blinky
+openflex blinky_synth.yml -c blinky.csv
+```
+
+Notice the `-c blinky.csv` argument passed. This specifies the name for the CSV file that the results are output to (fMax, resource utilization, etc.). Note that the CSV file is appended to, not overwritten.
+
+### Custom Flexible Parameter Generation
+
+You are not limited to the rigid parameter combinations that you supply via the YAML configuration. It is also possible to utilize the `FlexConfig()` class from your own custom Python scripts to utilize the power of Python to generate some extremely precise parameter combinations that would be tedious to do manually or through basic filelists/configurations.
+
+An example of this is provided in the blinky example directory: [`blinky.py`](examples/blinky/blinky.py)
+
+The `FlexConfig()` class has an `add_parameter()` method that allows a custom function to be passed which is used to insert new parameters into the parameter list.
+
+For example, in [`blinky.py`](examples/blinky/blinky.py), we create a `generate_count()` function that simply picks a random value between 1k and 100k. This is a trivial use-case, of course.
+
+```python
+def generate_count():
+    count = random.randint(1e3, 1e7)
+
+    params = []
+    params.append(count)
+    return list(set(params))
+```
+
+Later, we instantiate an instance of `FlexConfig()` by passing the YAML configuration, and call the `add_parameter()` method to add the random `count` parameter value. We could also add more random (or specific) `count` values and add them to the return of this `generate_count()` function:
+
+```python
+dut = config.FlexConfig("./blinky_synth.yml")
+dut.add_parameter("COUNT", generate_count)
+```
+
+Additionally, it is possible to **read** existing parameters inside these `generate()` functions to use them as variables when calculating new pararmeters to prevent "illegal" combinations.
 
 ## Contributing
 

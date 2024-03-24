@@ -22,7 +22,7 @@ dependencies = [
 "Homepage" = "https://github.com/wespiard/openflex"
 
 [project.scripts]
-openflex = "openflex.__main__:run"
+openflex = "openflex.main:run"
 
 [tool.setuptools.packages.find]
 include = ["openflex"]

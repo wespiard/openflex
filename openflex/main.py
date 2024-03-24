@@ -29,6 +29,7 @@ from .config import FlexConfig
 @click.option("-c", "--synth_csv", help="results csv file for synthesis runs")
 @click.option("-p", "--clk_period", help="clock period", default="1.0")
 @click.option("-s", "--sample", help="randomly sample specified amount")
+@click.version_option()
 def run(config_file, mode, tool, synth_csv, clk_period, sample):
     dut = FlexConfig(config_file)
 
@@ -45,10 +46,8 @@ def run(config_file, mode, tool, synth_csv, clk_period, sample):
         else:
             sys.exit("ERROR: Invalid simulator.")
     elif mode == "synth":
-
         if not synth_csv:
             sys.exit("ERROR: Missing CSV filename")
-
         if tool == "vivado":
             dut.vivado_synth(synth_csv, clk_period)
         elif tool == "quartus":
