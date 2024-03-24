@@ -371,9 +371,9 @@ class FlexConfig:
                 build_cmd.append(f)
             build_cmd.append("-top")
             build_cmd.append(self.config["top"])
-            ret = subprocess.run(build_cmd, cwd=sim_dir).returncode
+            ret = subprocess.run(build_cmd, cwd=sim_dir)
 
-            if ret != 0:
+            if ret.returncode != 0:
                 tests_failed += 1
                 failed_tests.append(test_name)
 
