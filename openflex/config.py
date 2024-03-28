@@ -120,19 +120,8 @@ class FlexConfig:
             # Read the second line and split it into 3-tuples
             tuples_line = file.readline().strip()
 
-        tuples_list = tuples_line.split()
-
-        # Parse the 3-tuples into a list of (string, int, int) tuples
-        tuples = []
-        for item in tuples_list:
-            # print(f"ITEM = {item}")
-            parts = item.split(":")
-
-            string_value = parts[0]
-            int_value1 = int(parts[1])
-            int_value2 = int(parts[2])
-            # print(f"STRING={string_value} V1={int_value1} V2={int_value2}")
-            tuples.append((string_value, int_value1, int_value2))
+        # Parse the triplets into a list of (string, value, value) tuples
+        tuples = [tuple(item.split(":")) for item in tuples_line.split()]
 
         if not os.path.exists(csv_filename):
             # Create the CSV column headers

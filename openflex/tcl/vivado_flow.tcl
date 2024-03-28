@@ -44,15 +44,6 @@ close $fileID
 set output_dir ./outputs
 file mkdir $output_dir
 
-# top level module/entity name
-#set top alignment_buffer
-#set top vlp_delimited
-
-# choose FPGA part number
-# set device xc7k70tfbg676-2
-#set device xcku3p-ffva676-2-e
-#set device xcvu9p-flga2104-2L-e
-
 puts "----------------------------------------"
 puts " Reading design files"
 puts "----------------------------------------"
@@ -68,10 +59,6 @@ foreach file $file_names {
     }
 }
 
-# https://support.xilinx.com/s/article/52217?language=en_US
-#set_param [get_cells $top] -set WORD_WIDTH 16
-
-#set_property generic {WORD_WIDTH=16} [current_fileset]
 
 set pairs_list {}
 set parameters_path "parameters.txt"
@@ -86,18 +73,6 @@ while {[gets $fileID line] != -1} {
     lappend pairs_list $pair
 }
 close $fileID
-
-# load design sources
-# `-sv` flag not necessary if files have `.sv` extensions
-#read_verilog -sv ../../delay.sv
-#read_verilog -sv ../../delay_taps.sv
-#read_verilog -sv ../../shift_pipe.sv
-#read_verilog -sv ../../shift_lr_pipe.sv
-#read_verilog -sv ../../field_aligner.sv
-#read_verilog -sv ../../field_buffer.sv
-#read_verilog -sv ../../priority_encoder_pipe.sv
-#read_verilog -sv ../../priority_encoder_multi_pipe.sv
-#read_verilog -sv ../../vlp_delimited.sv
 
 # load constraints
 # NOTE: remove `-mode out_of_context` argument for full 
@@ -117,10 +92,6 @@ puts "----------------------------------------"
 # Run synthesis, write design checkpoint, report timing, 
 # and utilization estimates
 # --------------------------------------------------------
-
-# Synthesize
-#synth_design -top $top -part $device -mode out_of_context
-
 set synth_cmd "synth_design -top $top -part $device -mode out_of_context"
 foreach pair $pairs_list {
     #puts "Pair 1: [lindex $pair 0], Pair 2: [lindex $pair 1]"
@@ -128,7 +99,6 @@ foreach pair $pairs_list {
     set pval [lindex $pair 1]
     append synth_cmd " -generic $pname=$pval"
 }
-#puts $synth_cmd
 eval $synth_cmd
 
 write_checkpoint -force $output_dir/post_synth.dcp
