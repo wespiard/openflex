@@ -27,6 +27,8 @@ import itertools
 import subprocess
 import csv
 import yaml
+import matplotlib.pyplot as plt
+import pandas as pd
 
 
 class FlexConfig:
@@ -104,10 +106,11 @@ class FlexConfig:
     def sample(self, n):
         self.combinations = random.sample(self.combinations, int(n))
 
-    def process_vivado_results(self, parameters, csv_filename):
+    def process_vivado_results(self, parameters, csv_filename, dir):
         # TODO: should we force user to delete build dir, or give option?
         # vivado_build_dir = pathlib.Path("build_vivado").mkdir(exist_ok=True)
-        vivado_dir = "build_vivado"
+        # vivado_dir = "build_vivado"
+        vivado_dir = dir
         vivado_file = os.path.join(vivado_dir, "vivado_report.txt")
 
         with open(vivado_file, "r") as file:
@@ -148,21 +151,34 @@ class FlexConfig:
             csv_writer.writerow(row)
 
     def vivado_synth(self, csv_filename, clk_period=1.0):
-        vivado_dir = "build_vivado"
-        vivado_filelist = f"{vivado_dir}/filelist.txt"
-        vivado_parameters = f"{vivado_dir}/parameters.txt"
-        vivado_xdc = f"{vivado_dir}/vivado.xdc"
+        path = pathlib.Path("vivado_build")
 
-        vivado_tcl_file = os.path.join(os.path.dirname(__file__), "tcl", "vivado_flow.tcl")
-        pathlib.Path(vivado_dir).mkdir(exist_ok=True)
+        if path.is_dir():
+            print(f"Directory '{path.name}' exists.")
+            ans = input("Okay to delete and proceed? (y/n)")
+            if ans == "y":
+                path.rmdir()
+            else:
+                sys.exit()
 
-        # Generate the filelist
-        with open(vivado_filelist, "w") as file:
-            for file_name in self.files:
-                file.write(file_name + "\n")
+        pathlib.Path("vivado_build").mkdir(exist_ok=False)
 
-        # Generate the filelist
-        for c in self.combinations:
+        for i, c in enumerate(self.combinations):
+            vivado_dir = f"{path.name}/build_{i}"
+            vivado_build_subdir = pathlib.Path(vivado_dir)
+            vivado_filelist = f"{vivado_dir}/filelist.txt"
+            vivado_parameters = f"{vivado_dir}/parameters.txt"
+            vivado_xdc = f"{vivado_dir}/vivado.xdc"
+
+            vivado_tcl_file = os.path.join(os.path.dirname(__file__), "tcl", "vivado_flow.tcl")
+
+            pathlib.Path(vivado_dir).mkdir(exist_ok=False)
+
+            # Generate the filelist
+            with open(vivado_filelist, "w") as file:
+                for file_name in self.files:
+                    file.write(file_name + "\n")
+
             # Write the parameter values to a file that can be read by TCL
             with open(vivado_parameters, "w") as file:
                 for d in c.items():
@@ -190,7 +206,8 @@ class FlexConfig:
             subprocess.run(build_cmd, cwd=vivado_dir)
 
             # Post-process the run to collect results
-            self.process_vivado_results(c, csv_filename)
+            self.process_vivado_results(c, csv_filename, vivado_build_subdir.absolute())
+
 
     def process_quartus_results(self, parameters, output, csv_filename):
 

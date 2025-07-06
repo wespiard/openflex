@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "openflex"
 version = "0.1.4"
 authors = [
-    {name = "Greg Stitt"},
     {name = "Wesley Piard"},
+    {name = "Greg Stitt"},
 ]
 description = "Framework for Logic Synthesis and EXploration"
 readme = "README.md"
@@ -16,6 +16,8 @@ keywords = ["rtl", "hdl", "fpga"]
 dependencies = [
     "pyyaml>=6",
     "click>=8",
+    "matplotlib>=3",
+    "pandas",
 ]
 
 [project.urls]
