@@ -159,6 +159,7 @@ if {$wns ne ""} {
 }
 
 # Capture resource utilization
+open_checkpoint $output_dir/post_route.dcp
 set utilization_output [get_utilization]
 
 # Specify the file path where you want to save the utilization report
@@ -174,9 +175,9 @@ puts $file_id $utilization_output
 # Close the file
 close $file_id
 
-
 # generate a bitstream
 # write_bitstream -force $output_dir/cpu.bit
+
 puts "----------------------------------------"
 puts " Flow complete"
 puts "----------------------------------------"
